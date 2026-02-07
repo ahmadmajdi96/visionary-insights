@@ -1,17 +1,31 @@
+import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { ChevronRight } from 'lucide-react';
+import { ChevronRight, Trash2, Loader2 } from 'lucide-react';
 import { Job } from '@/types/job';
 import { StatusBadge } from './StatusBadge';
 import { cn } from '@/lib/utils';
 import { getOriginalImageUrl, getFilenameFromPath } from '@/services/api';
+import { Button } from '@/components/ui/button';
 
 interface JobCardProps {
   job: Job;
   onClick: () => void;
+  onDelete: (jobId: string) => Promise<void>;
 }
 
-export function JobCard({ job, onClick }: JobCardProps) {
+export function JobCard({ job, onClick, onDelete }: JobCardProps) {
+  const [isDeleting, setIsDeleting] = useState(false);
   const isClickable = job.status === 'SUCCEEDED';
+
+  const handleDelete = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setIsDeleting(true);
+    try {
+      await onDelete(job.job_id);
+    } finally {
+      setIsDeleting(false);
+    }
+  };
 
   return (
     <motion.div
@@ -70,6 +84,21 @@ export function JobCard({ job, onClick }: JobCardProps) {
         </p>
         <StatusBadge status={job.status} stage={job.stage} />
       </div>
+
+      {/* Delete button */}
+      <Button
+        variant="ghost"
+        size="icon"
+        onClick={handleDelete}
+        disabled={isDeleting}
+        className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+      >
+        {isDeleting ? (
+          <Loader2 className="w-4 h-4 animate-spin" />
+        ) : (
+          <Trash2 className="w-4 h-4" />
+        )}
+      </Button>
 
       {/* Arrow for completed jobs */}
       {isClickable && (

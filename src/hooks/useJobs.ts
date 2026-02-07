@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { Job, JobStatus } from '@/types/job';
-import { submitImage, getJobStatus, getJobResults, getAllJobs } from '@/services/api';
+import { submitImage, getJobStatus, getJobResults, getAllJobs, deleteJob as deleteJobApi } from '@/services/api';
 import { toast } from '@/hooks/use-toast';
 
 export function useJobs() {
@@ -177,6 +177,33 @@ export function useJobs() {
     return jobs.find(job => job.job_id === jobId);
   }, [jobs]);
 
+  const deleteJob = useCallback(async (jobId: string) => {
+    try {
+      // Stop polling if running
+      const interval = pollingRef.current.get(jobId);
+      if (interval) {
+        clearInterval(interval);
+        pollingRef.current.delete(jobId);
+      }
+      
+      await deleteJobApi(jobId);
+      setJobs(prev => prev.filter(job => job.job_id !== jobId));
+      
+      toast({
+        title: "🗑️ Job Deleted",
+        description: `Job ${jobId.slice(0, 8)}... has been removed.`,
+      });
+    } catch (error) {
+      console.error('Error deleting job:', error);
+      toast({
+        title: "❌ Delete Failed",
+        description: error instanceof Error ? error.message : "Failed to delete job.",
+        variant: "destructive",
+      });
+      throw error;
+    }
+  }, []);
+
   const refreshJobs = useCallback(() => {
     fetchAllJobs();
   }, [fetchAllJobs]);
@@ -187,6 +214,7 @@ export function useJobs() {
     isLoading,
     submitNewJob,
     getJob,
+    deleteJob,
     refreshJobs,
   };
 }

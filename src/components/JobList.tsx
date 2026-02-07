@@ -6,9 +6,10 @@ import { ImageIcon } from 'lucide-react';
 interface JobListProps {
   jobs: Job[];
   onJobClick: (jobId: string) => void;
+  onDeleteJob: (jobId: string) => Promise<void>;
 }
 
-export function JobList({ jobs, onJobClick }: JobListProps) {
+export function JobList({ jobs, onJobClick, onDeleteJob }: JobListProps) {
   if (jobs.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-16 px-4">
@@ -33,6 +34,7 @@ export function JobList({ jobs, onJobClick }: JobListProps) {
             key={job.job_id}
             job={job}
             onClick={() => onJobClick(job.job_id)}
+            onDelete={onDeleteJob}
           />
         ))}
       </AnimatePresence>
