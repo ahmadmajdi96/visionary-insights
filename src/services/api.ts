@@ -1,9 +1,8 @@
 import { CreateJobResponse, JobStatusResponse, JobResult, Job } from '@/types/job';
 
-// Use environment variable or default to the backend server.
-// IMPORTANT: If your frontend is on HTTPS, your API must also be reachable via HTTPS (or via a same-origin reverse proxy).
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://95.253.220.115:62077/v1';
-const API_HOST = import.meta.env.VITE_API_HOST || 'http://95.253.220.115:62077';
+// Backend API configuration - uses Cloudflare tunnel for HTTPS access
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://big-justice-axis-saves.trycloudflare.com/v1';
+const API_HOST = import.meta.env.VITE_API_HOST || 'https://big-justice-axis-saves.trycloudflare.com';
 
 export interface AllJobsResponse {
   jobs: {
