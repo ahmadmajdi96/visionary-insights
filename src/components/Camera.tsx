@@ -1,8 +1,9 @@
-import { useRef, useCallback, useState } from 'react';
+import { useRef, useCallback, useState, useEffect } from 'react';
 import Webcam from 'react-webcam';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Camera as CameraIcon, X, RotateCcw, Send, Loader2 } from 'lucide-react';
+import { Camera as CameraIcon, X, RotateCcw, Send, Loader2, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { toast } from '@/hooks/use-toast';
 
 interface CameraProps {
   isOpen: boolean;
@@ -15,12 +16,49 @@ export function Camera({ isOpen, onClose, onCapture, isSubmitting }: CameraProps
   const webcamRef = useRef<Webcam>(null);
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
   const [isCameraReady, setIsCameraReady] = useState(false);
+  const [cameraError, setCameraError] = useState<string | null>(null);
+  const [facingMode, setFacingMode] = useState<'environment' | 'user'>('environment');
+  const [retryCount, setRetryCount] = useState(0);
+
+  // Reset state when camera opens/closes
+  useEffect(() => {
+    if (isOpen) {
+      setCapturedImage(null);
+      setIsCameraReady(false);
+      setCameraError(null);
+      setFacingMode('environment');
+      setRetryCount(0);
+    }
+  }, [isOpen]);
 
   const videoConstraints = {
-    facingMode: { exact: 'environment' },
+    facingMode: facingMode,
     width: { ideal: 1920 },
     height: { ideal: 1080 },
   };
+
+  const handleCameraError = useCallback((error: string | DOMException) => {
+    console.error('Camera error:', error);
+    
+    // If environment camera fails, try user camera
+    if (facingMode === 'environment' && retryCount === 0) {
+      setRetryCount(1);
+      setFacingMode('user');
+      return;
+    }
+    
+    // Both cameras failed
+    const errorMessage = error instanceof DOMException 
+      ? error.message || 'Camera access denied'
+      : String(error);
+    
+    setCameraError(errorMessage || 'Unable to access camera');
+    toast({
+      title: "📷 Camera Error",
+      description: "Could not access camera. Please check permissions.",
+      variant: "destructive",
+    });
+  }, [facingMode, retryCount]);
 
   const capture = useCallback(() => {
     const imageSrc = webcamRef.current?.getScreenshot();
@@ -53,106 +91,135 @@ export function Camera({ isOpen, onClose, onCapture, isSubmitting }: CameraProps
   const handleClose = useCallback(() => {
     setCapturedImage(null);
     setIsCameraReady(false);
+    setCameraError(null);
     onClose();
   }, [onClose]);
 
+  if (!isOpen) return null;
+
   return (
     <AnimatePresence>
-      {isOpen && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          className="fixed inset-0 z-50 bg-background"
-        >
-          {/* Camera View */}
-          <div className="relative w-full h-full">
-            {!capturedImage ? (
-              <>
-                <Webcam
-                  ref={webcamRef}
-                  audio={false}
-                  screenshotFormat="image/jpeg"
-                  videoConstraints={videoConstraints}
-                  onUserMedia={() => setIsCameraReady(true)}
-                  onUserMediaError={(e) => console.error('Camera error:', e)}
-                  className="w-full h-full object-cover"
-                  style={{ transform: 'scaleX(1)' }}
-                />
-                
-                {/* Loading overlay */}
-                {!isCameraReady && (
-                  <div className="absolute inset-0 flex items-center justify-center bg-background">
-                    <Loader2 className="w-8 h-8 animate-spin text-primary" />
-                  </div>
-                )}
-              </>
-            ) : (
-              <img
-                src={capturedImage}
-                alt="Captured"
-                className="w-full h-full object-cover"
-              />
-            )}
-
-            {/* Top Bar */}
-            <div className="absolute top-0 left-0 right-0 safe-top">
-              <div className="flex items-center justify-between p-4">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={handleClose}
-                  className="w-10 h-10 rounded-full bg-background/80 backdrop-blur-sm"
-                >
-                  <X className="w-5 h-5" />
-                </Button>
-              </div>
+      <motion.div
+        key="camera-modal"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        className="fixed inset-0 z-50 bg-background"
+      >
+        {/* Camera View */}
+        <div className="relative w-full h-full">
+          {cameraError ? (
+            <div className="absolute inset-0 flex flex-col items-center justify-center bg-background p-8">
+              <AlertCircle className="w-16 h-16 text-destructive mb-4" />
+              <h3 className="text-lg font-semibold text-foreground mb-2">Camera Error</h3>
+              <p className="text-sm text-muted-foreground text-center mb-4">
+                {cameraError}
+              </p>
+              <p className="text-xs text-muted-foreground text-center">
+                Please ensure camera permissions are granted and try again.
+              </p>
             </div>
+          ) : !capturedImage ? (
+            <>
+              <Webcam
+                ref={webcamRef}
+                key={`webcam-${facingMode}-${retryCount}`}
+                audio={false}
+                screenshotFormat="image/jpeg"
+                videoConstraints={videoConstraints}
+                onUserMedia={() => {
+                  setIsCameraReady(true);
+                  setCameraError(null);
+                }}
+                onUserMediaError={handleCameraError}
+                className="w-full h-full object-cover"
+                style={{ transform: facingMode === 'user' ? 'scaleX(-1)' : 'scaleX(1)' }}
+              />
+              
+              {/* Loading overlay */}
+              {!isCameraReady && (
+                <div className="absolute inset-0 flex flex-col items-center justify-center bg-background">
+                  <Loader2 className="w-8 h-8 animate-spin text-primary mb-2" />
+                  <p className="text-sm text-muted-foreground">Starting camera...</p>
+                </div>
+              )}
+            </>
+          ) : (
+            <img
+              src={capturedImage}
+              alt="Captured"
+              className="w-full h-full object-cover"
+            />
+          )}
 
-            {/* Bottom Controls */}
-            <div className="absolute bottom-0 left-0 right-0 safe-bottom">
-              <div className="flex items-center justify-center gap-6 p-6 pb-8">
-                {!capturedImage ? (
-                  <motion.button
-                    whileTap={{ scale: 0.9 }}
-                    onClick={capture}
-                    disabled={!isCameraReady}
-                    className="w-20 h-20 rounded-full bg-primary flex items-center justify-center shadow-glow disabled:opacity-50"
-                  >
-                    <CameraIcon className="w-8 h-8 text-primary-foreground" />
-                  </motion.button>
-                ) : (
-                  <>
-                    <motion.button
-                      initial={{ scale: 0, opacity: 0 }}
-                      animate={{ scale: 1, opacity: 1 }}
-                      whileTap={{ scale: 0.9 }}
-                      onClick={retake}
-                      className="w-14 h-14 rounded-full bg-secondary flex items-center justify-center"
-                    >
-                      <RotateCcw className="w-6 h-6 text-secondary-foreground" />
-                    </motion.button>
-                    <motion.button
-                      initial={{ scale: 0, opacity: 0 }}
-                      animate={{ scale: 1, opacity: 1 }}
-                      whileTap={{ scale: 0.9 }}
-                      onClick={handleSubmit}
-                      disabled={isSubmitting}
-                      className="w-20 h-20 rounded-full bg-primary flex items-center justify-center shadow-glow disabled:opacity-50"
-                    >
-                      {isSubmitting ? (
-                        <Loader2 className="w-8 h-8 text-primary-foreground animate-spin" />
-                      ) : (
-                        <Send className="w-8 h-8 text-primary-foreground" />
-                      )}
-                    </motion.button>
-                  </>
-                )}
-              </div>
+          {/* Top Bar */}
+          <div className="absolute top-0 left-0 right-0 safe-top">
+            <div className="flex items-center justify-between p-4">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={handleClose}
+                className="w-10 h-10 rounded-full bg-background/80 backdrop-blur-sm"
+              >
+                <X className="w-5 h-5" />
+              </Button>
+              
+              {/* Show which camera is being used */}
+              {isCameraReady && !capturedImage && (
+                <div className="px-3 py-1 rounded-full bg-background/80 backdrop-blur-sm text-xs text-muted-foreground">
+                  {facingMode === 'environment' ? '📷 Rear Camera' : '🤳 Front Camera'}
+                </div>
+              )}
             </div>
           </div>
-        </motion.div>
-      )}
+
+          {/* Bottom Controls */}
+          <div className="absolute bottom-0 left-0 right-0 safe-bottom">
+            <div className="flex items-center justify-center gap-6 p-6 pb-8">
+              {cameraError ? (
+                <Button onClick={handleClose} variant="secondary">
+                  Close
+                </Button>
+              ) : !capturedImage ? (
+                <motion.button
+                  whileTap={{ scale: 0.9 }}
+                  onClick={capture}
+                  disabled={!isCameraReady}
+                  className="w-20 h-20 rounded-full bg-primary flex items-center justify-center shadow-glow disabled:opacity-50"
+                >
+                  <CameraIcon className="w-8 h-8 text-primary-foreground" />
+                </motion.button>
+              ) : (
+                <>
+                  <motion.button
+                    initial={{ scale: 0, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    whileTap={{ scale: 0.9 }}
+                    onClick={retake}
+                    className="w-14 h-14 rounded-full bg-secondary flex items-center justify-center"
+                  >
+                    <RotateCcw className="w-6 h-6 text-secondary-foreground" />
+                  </motion.button>
+                  <motion.button
+                    initial={{ scale: 0, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    whileTap={{ scale: 0.9 }}
+                    onClick={handleSubmit}
+                    disabled={isSubmitting}
+                    className="w-20 h-20 rounded-full bg-primary flex items-center justify-center shadow-glow disabled:opacity-50"
+                  >
+                    {isSubmitting ? (
+                      <Loader2 className="w-8 h-8 text-primary-foreground animate-spin" />
+                    ) : (
+                      <Send className="w-8 h-8 text-primary-foreground" />
+                    )}
+                  </motion.button>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+      </motion.div>
     </AnimatePresence>
   );
 }
