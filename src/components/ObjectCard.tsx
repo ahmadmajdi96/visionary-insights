@@ -1,13 +1,14 @@
 import { motion } from 'framer-motion';
 import { JobObject } from '@/types/job';
-import { getImageUrl } from '@/services/api';
+import { getImageUrl, getFilenameFromPath } from '@/services/api';
 
 interface ObjectCardProps {
   object: JobObject;
   index: number;
+  jobId: string;
 }
 
-export function ObjectCard({ object, index }: ObjectCardProps) {
+export function ObjectCard({ object, index, jobId }: ObjectCardProps) {
   const confidencePercent = Math.round(object.confidence * 100);
   const predConfidencePercent = Math.round(object.pred_confidence * 100);
 
@@ -21,7 +22,7 @@ export function ObjectCard({ object, index }: ObjectCardProps) {
       {/* Object Image */}
       <div className="aspect-square bg-muted">
         <img
-          src={getImageUrl(object.crop)}
+          src={getImageUrl(jobId, 'crop', getFilenameFromPath(object.crop))}
           alt={object.label}
           className="w-full h-full object-cover"
           onError={(e) => {

@@ -80,7 +80,12 @@ export async function getJobResults(jobId: string): Promise<JobResult> {
   return response.json();
 }
 
-export function getImageUrl(path: string): string {
-  // The path is already absolute from the API, just prepend the base
-  return `${API_HOST}${path}`;
+export function getFilenameFromPath(path: string): string {
+  // Extract filename from a path like /v1/jobs/xxx/files/annotated/image.jpg
+  return path.split('/').pop() || path;
+}
+
+export function getImageUrl(jobId: string, type: 'annotated' | 'crop', filename: string): string {
+  // Build URL based on the API pattern: /v1/jobs/<job_id>/files/<type>/<filename>
+  return `${API_HOST}/v1/jobs/${jobId}/files/${type}/${filename}`;
 }
