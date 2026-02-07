@@ -3,6 +3,7 @@ import { ChevronRight } from 'lucide-react';
 import { Job } from '@/types/job';
 import { StatusBadge } from './StatusBadge';
 import { cn } from '@/lib/utils';
+import { getOriginalImageUrl, getFilenameFromPath } from '@/services/api';
 
 interface JobCardProps {
   job: Job;
@@ -26,15 +27,37 @@ export function JobCard({ job, onClick }: JobCardProps) {
     >
       {/* Thumbnail */}
       <div className="w-16 h-16 rounded-md overflow-hidden bg-muted flex-shrink-0">
-        {job.localImageUrl ? (
-          <img
-            src={job.localImageUrl}
-            alt="Captured"
-            className="w-full h-full object-cover"
-          />
-        ) : (
-          <div className="w-full h-full bg-muted" />
-        )}
+        {(() => {
+          // Try to get original image from server first
+          const serverImagePath = job.result?.images?.[0]?.image;
+          if (serverImagePath) {
+            const filename = getFilenameFromPath(serverImagePath);
+            return (
+              <img
+                src={getOriginalImageUrl(job.job_id, filename)}
+                alt="Original"
+                className="w-full h-full object-cover"
+                onError={(e) => {
+                  // Fallback to local image if server image fails
+                  if (job.localImageUrl) {
+                    (e.target as HTMLImageElement).src = job.localImageUrl;
+                  }
+                }}
+              />
+            );
+          }
+          // Fallback to local image
+          if (job.localImageUrl) {
+            return (
+              <img
+                src={job.localImageUrl}
+                alt="Captured"
+                className="w-full h-full object-cover"
+              />
+            );
+          }
+          return <div className="w-full h-full bg-muted" />;
+        })()}
       </div>
 
       {/* Content */}

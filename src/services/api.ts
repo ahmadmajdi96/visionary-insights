@@ -85,7 +85,11 @@ export function getFilenameFromPath(path: string): string {
   return path.split('/').pop() || path;
 }
 
-export function getImageUrl(jobId: string, type: 'annotated' | 'crops', filename: string): string {
+export function getImageUrl(jobId: string, type: 'annotated' | 'crops' | 'input', filename: string): string {
   // Build URL based on the API pattern: /v1/jobs/<job_id>/files/<type>/<filename>
   return `${API_HOST}/v1/jobs/${jobId}/files/${type}/${filename}`;
+}
+
+export function getOriginalImageUrl(jobId: string, filename: string): string {
+  return `${API_HOST}/v1/jobs/${jobId}/files/input/${filename}`;
 }
