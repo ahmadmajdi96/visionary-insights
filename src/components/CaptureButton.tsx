@@ -7,7 +7,7 @@ interface CaptureButtonProps {
 
 export function CaptureButton({ onClick }: CaptureButtonProps) {
   return (
-    <div className="fixed bottom-0 left-0 right-0 flex justify-center pb-6 safe-bottom z-40 pointer-events-none">
+    <div className="fixed bottom-0 left-0 right-0 flex justify-center pb-12 safe-bottom z-40 pointer-events-none">
       <motion.button
         initial={{ scale: 0, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
