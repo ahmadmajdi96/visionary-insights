@@ -1,6 +1,8 @@
 import { CreateJobResponse, JobStatusResponse, JobResult, Job } from '@/types/job';
 
-const API_BASE_URL = 'http://95.253.220.115:62077/v1';
+// Use environment variable or default to the backend server
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://95.253.220.115:62077/v1';
+const API_HOST = import.meta.env.VITE_API_HOST || 'http://95.253.220.115:62077';
 
 export interface AllJobsResponse {
   jobs: {
@@ -80,5 +82,5 @@ export async function getJobResults(jobId: string): Promise<JobResult> {
 
 export function getImageUrl(path: string): string {
   // The path is already absolute from the API, just prepend the base
-  return `http://95.253.220.115:62077${path}`;
+  return `${API_HOST}${path}`;
 }

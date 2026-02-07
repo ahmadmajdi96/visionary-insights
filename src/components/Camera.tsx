@@ -20,7 +20,7 @@ export function Camera({ isOpen, onClose, onCapture, isSubmitting }: CameraProps
   const [facingMode, setFacingMode] = useState<'environment' | 'user'>('environment');
   const [retryCount, setRetryCount] = useState(0);
 
-  // Reset state when camera opens/closes
+  // Request camera permission explicitly when opened
   useEffect(() => {
     if (isOpen) {
       setCapturedImage(null);
@@ -28,6 +28,17 @@ export function Camera({ isOpen, onClose, onCapture, isSubmitting }: CameraProps
       setCameraError(null);
       setFacingMode('environment');
       setRetryCount(0);
+      
+      // Explicitly request camera permission
+      navigator.mediaDevices?.getUserMedia({ video: true })
+        .then((stream) => {
+          // Stop the stream immediately, react-webcam will create its own
+          stream.getTracks().forEach(track => track.stop());
+        })
+        .catch((err) => {
+          console.error('Camera permission denied:', err);
+          setCameraError('Camera permission denied. Please allow camera access in your browser settings.');
+        });
     }
   }, [isOpen]);
 
