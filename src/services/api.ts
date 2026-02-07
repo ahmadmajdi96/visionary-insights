@@ -1,6 +1,34 @@
-import { CreateJobResponse, JobStatusResponse, JobResult } from '@/types/job';
+import { CreateJobResponse, JobStatusResponse, JobResult, Job } from '@/types/job';
 
 const API_BASE_URL = 'http://95.253.220.115:62077/v1';
+
+export interface AllJobsResponse {
+  jobs: {
+    job_id: string;
+    status: string;
+    stage?: string;
+    updated_at?: string;
+  }[];
+}
+
+export async function getAllJobs(): Promise<AllJobsResponse> {
+  try {
+    const response = await fetch(`${API_BASE_URL}/jobs`, {
+      mode: 'cors',
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to fetch jobs: ${response.statusText}`);
+    }
+
+    return response.json();
+  } catch (error) {
+    if (error instanceof TypeError && error.message.includes('Failed to fetch')) {
+      throw new Error('Network error: Server may be unreachable.');
+    }
+    throw error;
+  }
+}
 
 export async function submitImage(file: File): Promise<CreateJobResponse> {
   const formData = new FormData();
