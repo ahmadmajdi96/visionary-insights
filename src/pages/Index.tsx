@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { AnimatePresence } from 'framer-motion';
+
 import { Scan, RefreshCw, Loader2 } from 'lucide-react';
 import { useJobs } from '@/hooks/useJobs';
 import { JobList } from '@/components/JobList';
@@ -83,14 +83,12 @@ const Index = () => {
       <CaptureButton onClick={() => setIsCameraOpen(true)} />
 
       {/* Camera Modal */}
-      <AnimatePresence>
-        <Camera
-          isOpen={isCameraOpen}
-          onClose={() => setIsCameraOpen(false)}
-          onCapture={handleCapture}
-          isSubmitting={isSubmitting}
-        />
-      </AnimatePresence>
+      <Camera
+        isOpen={isCameraOpen}
+        onClose={() => setIsCameraOpen(false)}
+        onCapture={handleCapture}
+        isSubmitting={isSubmitting}
+      />
     </div>
   );
 };
