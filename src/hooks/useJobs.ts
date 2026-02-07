@@ -1,11 +1,12 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
-import { Job } from '@/types/job';
-import { submitImage, getJobStatus, getJobResults } from '@/services/api';
+import { Job, JobStatus } from '@/types/job';
+import { submitImage, getJobStatus, getJobResults, getAllJobs } from '@/services/api';
 import { toast } from '@/hooks/use-toast';
 
 export function useJobs() {
   const [jobs, setJobs] = useState<Job[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const pollingRef = useRef<Map<string, NodeJS.Timeout>>(new Map());
 
   const updateJob = useCallback((jobId: string, updates: Partial<Job>) => {
@@ -28,7 +29,7 @@ export function useJobs() {
         
         const result = await getJobResults(jobId);
         updateJob(jobId, { 
-          status: status.status, 
+          status: status.status as JobStatus, 
           stage: status.stage,
           updated_at: status.updated_at,
           result 
@@ -46,7 +47,7 @@ export function useJobs() {
           pollingRef.current.delete(jobId);
         }
         updateJob(jobId, { 
-          status: status.status, 
+          status: status.status as JobStatus, 
           stage: status.stage,
           updated_at: status.updated_at 
         });
@@ -58,7 +59,7 @@ export function useJobs() {
         });
       } else {
         updateJob(jobId, { 
-          status: status.status, 
+          status: status.status as JobStatus, 
           stage: status.stage,
           updated_at: status.updated_at 
         });
@@ -69,6 +70,9 @@ export function useJobs() {
   }, [updateJob]);
 
   const startPolling = useCallback((jobId: string) => {
+    // Don't start polling if already polling
+    if (pollingRef.current.has(jobId)) return;
+    
     // Poll immediately
     pollJobStatus(jobId);
     
@@ -76,6 +80,57 @@ export function useJobs() {
     const interval = setInterval(() => pollJobStatus(jobId), 2000);
     pollingRef.current.set(jobId, interval);
   }, [pollJobStatus]);
+
+  // Fetch all jobs from server on mount
+  const fetchAllJobs = useCallback(async () => {
+    setIsLoading(true);
+    try {
+      const response = await getAllJobs();
+      
+      const serverJobs: Job[] = response.jobs.map(job => ({
+        job_id: job.job_id,
+        status: job.status as JobStatus,
+        stage: job.stage,
+        updated_at: job.updated_at,
+      }));
+      
+      setJobs(serverJobs);
+      
+      // Start polling for jobs that are still in progress
+      serverJobs.forEach(job => {
+        if (job.status === 'QUEUED' || job.status === 'RUNNING') {
+          startPolling(job.job_id);
+        }
+      });
+      
+      // Fetch results for completed jobs
+      serverJobs.forEach(async (job) => {
+        if (job.status === 'SUCCEEDED') {
+          try {
+            const result = await getJobResults(job.job_id);
+            updateJob(job.job_id, { result });
+          } catch (e) {
+            console.error('Failed to fetch results for job:', job.job_id, e);
+          }
+        }
+      });
+      
+    } catch (error) {
+      console.error('Error fetching jobs:', error);
+      toast({
+        title: "⚠️ Could not load jobs",
+        description: error instanceof Error ? error.message : "Failed to fetch jobs from server.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  }, [startPolling, updateJob]);
+
+  // Fetch jobs on mount
+  useEffect(() => {
+    fetchAllJobs();
+  }, [fetchAllJobs]);
 
   const submitNewJob = useCallback(async (file: File, localImageUrl: string) => {
     setIsSubmitting(true);
@@ -122,10 +177,16 @@ export function useJobs() {
     return jobs.find(job => job.job_id === jobId);
   }, [jobs]);
 
+  const refreshJobs = useCallback(() => {
+    fetchAllJobs();
+  }, [fetchAllJobs]);
+
   return {
     jobs,
     isSubmitting,
+    isLoading,
     submitNewJob,
     getJob,
+    refreshJobs,
   };
 }
