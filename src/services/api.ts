@@ -6,20 +6,30 @@ export async function submitImage(file: File): Promise<CreateJobResponse> {
   const formData = new FormData();
   formData.append('file', file);
 
-  const response = await fetch(`${API_BASE_URL}/infer/image`, {
-    method: 'POST',
-    body: formData,
-  });
+  try {
+    const response = await fetch(`${API_BASE_URL}/infer/image`, {
+      method: 'POST',
+      body: formData,
+      mode: 'cors',
+    });
 
-  if (!response.ok) {
-    throw new Error(`Failed to submit image: ${response.statusText}`);
+    if (!response.ok) {
+      throw new Error(`Server error: ${response.status} ${response.statusText}`);
+    }
+
+    return response.json();
+  } catch (error) {
+    if (error instanceof TypeError && error.message.includes('Failed to fetch')) {
+      throw new Error('Network error: Server may be unreachable or blocking CORS requests. Please ensure the server allows requests from this origin.');
+    }
+    throw error;
   }
-
-  return response.json();
 }
 
 export async function getJobStatus(jobId: string): Promise<JobStatusResponse> {
-  const response = await fetch(`${API_BASE_URL}/jobs/${jobId}`);
+  const response = await fetch(`${API_BASE_URL}/jobs/${jobId}`, {
+    mode: 'cors',
+  });
 
   if (!response.ok) {
     throw new Error(`Failed to get job status: ${response.statusText}`);
@@ -29,7 +39,9 @@ export async function getJobStatus(jobId: string): Promise<JobStatusResponse> {
 }
 
 export async function getJobResults(jobId: string): Promise<JobResult> {
-  const response = await fetch(`${API_BASE_URL}/jobs/${jobId}/results`);
+  const response = await fetch(`${API_BASE_URL}/jobs/${jobId}/results`, {
+    mode: 'cors',
+  });
 
   if (!response.ok) {
     throw new Error(`Failed to get job results: ${response.statusText}`);

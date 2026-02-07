@@ -1,6 +1,7 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
-import { Job, JobStatus } from '@/types/job';
+import { Job } from '@/types/job';
 import { submitImage, getJobStatus, getJobResults } from '@/services/api';
+import { toast } from '@/hooks/use-toast';
 
 export function useJobs() {
   const [jobs, setJobs] = useState<Job[]>([]);
@@ -32,6 +33,11 @@ export function useJobs() {
           updated_at: status.updated_at,
           result 
         });
+        
+        toast({
+          title: "✅ Scan Complete!",
+          description: `Job ${jobId.slice(0, 8)}... finished with ${result.images?.[0]?.objects?.length || 0} objects detected.`,
+        });
       } else if (status.status === 'FAILED') {
         // Stop polling on failure
         const interval = pollingRef.current.get(jobId);
@@ -43,6 +49,12 @@ export function useJobs() {
           status: status.status, 
           stage: status.stage,
           updated_at: status.updated_at 
+        });
+        
+        toast({
+          title: "❌ Scan Failed",
+          description: `Job ${jobId.slice(0, 8)}... encountered an error.`,
+          variant: "destructive",
         });
       } else {
         updateJob(jobId, { 
@@ -79,9 +91,19 @@ export function useJobs() {
       setJobs(prev => [newJob, ...prev]);
       startPolling(response.job_id);
       
+      toast({
+        title: "📤 Image Submitted",
+        description: "Your image is being processed...",
+      });
+      
       return response.job_id;
     } catch (error) {
       console.error('Error submitting job:', error);
+      toast({
+        title: "❌ Upload Failed",
+        description: error instanceof Error ? error.message : "Failed to submit image. Check if the server is reachable and allows CORS.",
+        variant: "destructive",
+      });
       throw error;
     } finally {
       setIsSubmitting(false);
