@@ -22,7 +22,7 @@ export function ObjectCard({ object, index, jobId }: ObjectCardProps) {
       {/* Object Image */}
       <div className="aspect-square bg-muted">
         <img
-          src={getImageUrl(jobId, 'crop', getFilenameFromPath(object.crop))}
+          src={getImageUrl(jobId, 'crops', getFilenameFromPath(object.crop))}
           alt={object.label}
           className="w-full h-full object-cover"
           onError={(e) => {
