@@ -1,4 +1,4 @@
-import { useRef, useCallback, useState, useEffect } from 'react';
+import { useRef, useCallback, useState, useEffect, useMemo } from 'react';
 import Webcam from 'react-webcam';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Camera as CameraIcon, X, RotateCcw, Send, Loader2, AlertCircle } from 'lucide-react';
@@ -19,34 +19,64 @@ export function Camera({ isOpen, onClose, onCapture, isSubmitting }: CameraProps
   const [cameraError, setCameraError] = useState<string | null>(null);
   const [facingMode, setFacingMode] = useState<'environment' | 'user'>('environment');
   const [retryCount, setRetryCount] = useState(0);
+  const [hasUserStartedCamera, setHasUserStartedCamera] = useState(false);
 
-  // Request camera permission explicitly when opened
+  const isIOS = useMemo(() => {
+    // iPadOS can report as MacIntel with touch points
+    const ua = navigator.userAgent || '';
+    const platform = navigator.platform || '';
+    const isAppleMobile = /iPad|iPhone|iPod/.test(ua);
+    const isIPadOS = platform === 'MacIntel' && navigator.maxTouchPoints > 1;
+    return isAppleMobile || isIPadOS;
+  }, []);
+
+  // Reset state when opening
   useEffect(() => {
-    if (isOpen) {
-      setCapturedImage(null);
-      setIsCameraReady(false);
-      setCameraError(null);
-      setFacingMode('environment');
-      setRetryCount(0);
-      
-      // Explicitly request camera permission
-      navigator.mediaDevices?.getUserMedia({ video: true })
-        .then((stream) => {
-          // Stop the stream immediately, react-webcam will create its own
-          stream.getTracks().forEach(track => track.stop());
-        })
-        .catch((err) => {
-          console.error('Camera permission denied:', err);
-          setCameraError('Camera permission denied. Please allow camera access in your browser settings.');
-        });
-    }
+    if (!isOpen) return;
+
+    setCapturedImage(null);
+    setIsCameraReady(false);
+    setCameraError(null);
+    setFacingMode('environment');
+    setRetryCount(0);
+    setHasUserStartedCamera(false);
   }, [isOpen]);
 
-  const videoConstraints: MediaTrackConstraints = {
-    facingMode: { ideal: facingMode },
-    width: { ideal: 1920 },
-    height: { ideal: 1080 },
-  };
+  // Request camera permission after an explicit user gesture (important for iOS Safari reliability)
+  useEffect(() => {
+    if (!isOpen || !hasUserStartedCamera) return;
+
+    let isCancelled = false;
+
+    navigator.mediaDevices?.getUserMedia({ video: true })
+      .then((stream) => {
+        if (isCancelled) {
+          stream.getTracks().forEach((t) => t.stop());
+          return;
+        }
+        // Stop the stream immediately, react-webcam will create its own
+        stream.getTracks().forEach((track) => track.stop());
+      })
+      .catch((err) => {
+        console.error('Camera permission denied:', err);
+        setCameraError('Camera permission denied. Please allow camera access in Safari settings.');
+      });
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [isOpen, hasUserStartedCamera]);
+
+  const videoConstraints: MediaTrackConstraints = isIOS
+    ? {
+        // iOS Safari is picky; keep constraints minimal to improve stream start reliability
+        facingMode,
+      }
+    : {
+        facingMode: { ideal: facingMode },
+        width: { ideal: 1920 },
+        height: { ideal: 1080 },
+      };
 
   const handleCameraError = useCallback((error: string | DOMException) => {
     console.error('Camera error:', error);
@@ -130,31 +160,49 @@ export function Camera({ isOpen, onClose, onCapture, isSubmitting }: CameraProps
                 Please ensure camera permissions are granted and try again.
               </p>
             </div>
-          ) : !capturedImage ? (
+           ) : !capturedImage ? (
             <>
-              <Webcam
-                ref={webcamRef}
-                key={`webcam-${facingMode}-${retryCount}`}
-                audio={false}
-                muted
-                playsInline
-                screenshotFormat="image/jpeg"
-                videoConstraints={videoConstraints}
-                onUserMedia={() => {
-                  setIsCameraReady(true);
-                  setCameraError(null);
-                }}
-                onUserMediaError={handleCameraError}
-                className="w-full h-full object-cover"
-                mirrored={facingMode === 'user'}
-              />
-              
-              {/* Loading overlay */}
-              {!isCameraReady && (
-                <div className="absolute inset-0 flex flex-col items-center justify-center bg-background">
-                  <Loader2 className="w-8 h-8 animate-spin text-primary mb-2" />
-                  <p className="text-sm text-muted-foreground">Starting camera...</p>
+              {!hasUserStartedCamera ? (
+                <div className="absolute inset-0 flex flex-col items-center justify-center bg-background p-8">
+                  <h3 className="text-lg font-semibold text-foreground mb-2">Ready to scan</h3>
+                  <p className="text-sm text-muted-foreground text-center mb-6">
+                    Tap the button below to start the camera.
+                    {isIOS ? ' (iPhone/iPad Safari requires a user tap)' : ''}
+                  </p>
+                  <Button
+                    onClick={() => setHasUserStartedCamera(true)}
+                    className="rounded-full px-6"
+                  >
+                    Start camera
+                  </Button>
                 </div>
+              ) : (
+                <>
+                  <Webcam
+                    ref={webcamRef}
+                    key={`webcam-${facingMode}-${retryCount}`}
+                    audio={false}
+                    muted
+                    playsInline
+                    screenshotFormat="image/jpeg"
+                    videoConstraints={videoConstraints}
+                    onUserMedia={() => {
+                      setIsCameraReady(true);
+                      setCameraError(null);
+                    }}
+                    onUserMediaError={handleCameraError}
+                    className="w-full h-full object-cover"
+                    mirrored={facingMode === 'user'}
+                  />
+
+                  {/* Loading overlay */}
+                  {!isCameraReady && (
+                    <div className="absolute inset-0 flex flex-col items-center justify-center bg-background">
+                      <Loader2 className="w-8 h-8 animate-spin text-primary mb-2" />
+                      <p className="text-sm text-muted-foreground">Starting camera...</p>
+                    </div>
+                  )}
+                </>
               )}
             </>
           ) : (
@@ -194,14 +242,18 @@ export function Camera({ isOpen, onClose, onCapture, isSubmitting }: CameraProps
                   Close
                 </Button>
               ) : !capturedImage ? (
-                <motion.button
-                  whileTap={{ scale: 0.9 }}
-                  onClick={capture}
-                  disabled={!isCameraReady}
-                  className="w-20 h-20 rounded-full bg-primary flex items-center justify-center shadow-glow disabled:opacity-50"
-                >
-                  <CameraIcon className="w-8 h-8 text-primary-foreground" />
-                </motion.button>
+                hasUserStartedCamera ? (
+                  <motion.button
+                    whileTap={{ scale: 0.9 }}
+                    onClick={capture}
+                    disabled={!isCameraReady}
+                    className="w-20 h-20 rounded-full bg-primary flex items-center justify-center shadow-glow disabled:opacity-50"
+                  >
+                    <CameraIcon className="w-8 h-8 text-primary-foreground" />
+                  </motion.button>
+                ) : (
+                  <div className="h-20" />
+                )
               ) : (
                 <>
                   <motion.button
