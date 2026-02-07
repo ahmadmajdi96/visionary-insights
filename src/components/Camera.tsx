@@ -42,30 +42,9 @@ export function Camera({ isOpen, onClose, onCapture, isSubmitting }: CameraProps
     setHasUserStartedCamera(false);
   }, [isOpen]);
 
-  // Request camera permission after an explicit user gesture (important for iOS Safari reliability)
-  useEffect(() => {
-    if (!isOpen || !hasUserStartedCamera) return;
-
-    let isCancelled = false;
-
-    navigator.mediaDevices?.getUserMedia({ video: true })
-      .then((stream) => {
-        if (isCancelled) {
-          stream.getTracks().forEach((t) => t.stop());
-          return;
-        }
-        // Stop the stream immediately, react-webcam will create its own
-        stream.getTracks().forEach((track) => track.stop());
-      })
-      .catch((err) => {
-        console.error('Camera permission denied:', err);
-        setCameraError('Camera permission denied. Please allow camera access in Safari settings.');
-      });
-
-    return () => {
-      isCancelled = true;
-    };
-  }, [isOpen, hasUserStartedCamera]);
+  // On iOS Safari, do NOT pre-request getUserMedia before the Webcam component mounts.
+  // The double-request causes Safari to re-prompt for permission and often fail on the second grant.
+  // Instead, rely on react-webcam to acquire the stream directly after the user taps "Start camera".
 
   const videoConstraints: MediaTrackConstraints = isIOS
     ? {
