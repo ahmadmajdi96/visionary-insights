@@ -1,7 +1,7 @@
 import { motion } from 'framer-motion';
 import { ArrowLeft, CheckCircle2, Grid, Image as ImageIcon } from 'lucide-react';
 import { Job } from '@/types/job';
-import { getImageUrl } from '@/services/api';
+import { getImageUrl, getFilenameFromPath } from '@/services/api';
 import { ObjectCard } from './ObjectCard';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
@@ -90,7 +90,7 @@ export function ResultsView({ job, onBack }: ResultsViewProps) {
             className="rounded-lg overflow-hidden shadow-medium"
           >
             <img
-              src={getImageUrl(image.annotated)}
+              src={getImageUrl(job.job_id, 'annotated', getFilenameFromPath(image.annotated))}
               alt="Annotated result"
               className="w-full h-auto"
               onError={(e) => {
@@ -103,7 +103,7 @@ export function ResultsView({ job, onBack }: ResultsViewProps) {
         {viewMode === 'objects' && (
           <div className="grid grid-cols-2 gap-3">
             {objects.map((obj, index) => (
-              <ObjectCard key={index} object={obj} index={index} />
+              <ObjectCard key={index} object={obj} index={index} jobId={job.job_id} />
             ))}
           </div>
         )}
