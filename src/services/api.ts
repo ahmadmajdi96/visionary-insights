@@ -80,6 +80,17 @@ export async function getJobResults(jobId: string): Promise<JobResult> {
   return response.json();
 }
 
+export async function deleteJob(jobId: string): Promise<void> {
+  const response = await fetch(`${API_BASE_URL}/jobs/${jobId}`, {
+    method: 'DELETE',
+    mode: 'cors',
+  });
+
+  if (!response.ok) {
+    throw new Error(`Failed to delete job: ${response.statusText}`);
+  }
+}
+
 export function getFilenameFromPath(path: string): string {
   // Extract filename from a path like /v1/jobs/xxx/files/annotated/image.jpg
   return path.split('/').pop() || path;

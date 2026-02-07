@@ -9,7 +9,7 @@ import { ResultsView } from '@/components/ResultsView';
 import { Button } from '@/components/ui/button';
 
 const Index = () => {
-  const { jobs, isSubmitting, isLoading, submitNewJob, getJob, refreshJobs } = useJobs();
+  const { jobs, isSubmitting, isLoading, submitNewJob, getJob, deleteJob, refreshJobs } = useJobs();
   const [isCameraOpen, setIsCameraOpen] = useState(false);
   const [selectedJobId, setSelectedJobId] = useState<string | null>(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -75,7 +75,7 @@ const Index = () => {
             <p className="text-sm text-muted-foreground">Loading jobs from server...</p>
           </div>
         ) : (
-          <JobList jobs={jobs} onJobClick={handleJobClick} />
+          <JobList jobs={jobs} onJobClick={handleJobClick} onDeleteJob={deleteJob} />
         )}
       </main>
 
