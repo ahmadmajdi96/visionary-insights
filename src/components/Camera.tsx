@@ -42,8 +42,8 @@ export function Camera({ isOpen, onClose, onCapture, isSubmitting }: CameraProps
     }
   }, [isOpen]);
 
-  const videoConstraints = {
-    facingMode: facingMode,
+  const videoConstraints: MediaTrackConstraints = {
+    facingMode: { ideal: facingMode },
     width: { ideal: 1920 },
     height: { ideal: 1080 },
   };
@@ -136,6 +136,8 @@ export function Camera({ isOpen, onClose, onCapture, isSubmitting }: CameraProps
                 ref={webcamRef}
                 key={`webcam-${facingMode}-${retryCount}`}
                 audio={false}
+                muted
+                playsInline
                 screenshotFormat="image/jpeg"
                 videoConstraints={videoConstraints}
                 onUserMedia={() => {
@@ -144,7 +146,7 @@ export function Camera({ isOpen, onClose, onCapture, isSubmitting }: CameraProps
                 }}
                 onUserMediaError={handleCameraError}
                 className="w-full h-full object-cover"
-                style={{ transform: facingMode === 'user' ? 'scaleX(-1)' : 'scaleX(1)' }}
+                mirrored={facingMode === 'user'}
               />
               
               {/* Loading overlay */}
