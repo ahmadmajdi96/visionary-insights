@@ -9,6 +9,37 @@ export interface JobObject {
   crop_rel: string;
   pred_label: string;
   pred_confidence: number;
+  shelf_index?: number;
+  index_in_shelf?: number;
+}
+
+export interface ShelfInfo {
+  shelf_index: number;
+  y_center_min: number;
+  y_center_max: number;
+  total_objects: number;
+  known_count: number;
+  unknown_count: number;
+  class_counts: Record<string, number>;
+  classes_left_to_right: string[];
+}
+
+export interface ShelvesData {
+  shelves: ShelfInfo[];
+  total_known: number;
+  total_unknown: number;
+  total_objects: number;
+}
+
+export interface PlanogramData {
+  planogram: string[][];
+}
+
+export interface ComplianceData {
+  match_score: number;
+  match_percent: number;
+  total_expected: number;
+  total_matched: number;
 }
 
 export interface JobImage {
@@ -17,6 +48,9 @@ export interface JobImage {
   annotated: string;
   annotated_rel: string;
   objects: JobObject[];
+  shelves?: ShelvesData;
+  planogram?: PlanogramData;
+  compliance?: ComplianceData;
 }
 
 export interface JobResult {
