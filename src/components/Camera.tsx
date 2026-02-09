@@ -181,6 +181,25 @@ export function Camera({ isOpen, onClose, onCapture, isSubmitting }: CameraProps
                     mirrored={facingMode === 'user'}
                   />
 
+                  {/* Viewfinder guide overlay */}
+                  {isCameraReady && (
+                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                      <div className="relative w-[80%] aspect-[4/3] border-2 border-green-500 rounded-lg">
+                        {/* Horizontal center line */}
+                        <div className="absolute top-1/2 left-0 right-0 h-px bg-green-500 opacity-70" />
+                        {/* Corner accents */}
+                        <div className="absolute -top-px -left-px w-5 h-5 border-t-[3px] border-l-[3px] border-green-400 rounded-tl-lg" />
+                        <div className="absolute -top-px -right-px w-5 h-5 border-t-[3px] border-r-[3px] border-green-400 rounded-tr-lg" />
+                        <div className="absolute -bottom-px -left-px w-5 h-5 border-b-[3px] border-l-[3px] border-green-400 rounded-bl-lg" />
+                        <div className="absolute -bottom-px -right-px w-5 h-5 border-b-[3px] border-r-[3px] border-green-400 rounded-br-lg" />
+                        {/* Label */}
+                        <span className="absolute -bottom-7 left-1/2 -translate-x-1/2 text-xs text-green-400 whitespace-nowrap">
+                          Align object flat within the frame
+                        </span>
+                      </div>
+                    </div>
+                  )}
+
                   {/* Loading overlay */}
                   {!isCameraReady && (
                     <div className="absolute inset-0 flex flex-col items-center justify-center bg-background">
