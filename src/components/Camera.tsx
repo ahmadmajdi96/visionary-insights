@@ -166,6 +166,7 @@ export function Camera({ isOpen, onClose, onCapture, isSubmitting }: CameraProps
                     muted
                     playsInline
                     screenshotFormat="image/jpeg"
+                    screenshotQuality={1}
                     videoConstraints={videoConstraints}
                     onUserMedia={() => {
                       setIsCameraReady(true);
