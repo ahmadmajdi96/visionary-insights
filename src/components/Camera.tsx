@@ -83,7 +83,11 @@ export function Camera({ isOpen, onClose, onCapture, isSubmitting }: CameraProps
   }, [facingMode, retryCount]);
 
   const capture = useCallback(() => {
-    const imageSrc = webcamRef.current?.getScreenshot();
+    // Capture at the video's native sensor resolution (not the CSS display size)
+    const video = webcamRef.current?.video;
+    const nativeWidth = video?.videoWidth || 1920;
+    const nativeHeight = video?.videoHeight || 1080;
+    const imageSrc = webcamRef.current?.getScreenshot({ width: nativeWidth, height: nativeHeight });
     if (imageSrc) {
       setCapturedImage(imageSrc);
     }
