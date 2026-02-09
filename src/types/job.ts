@@ -48,6 +48,9 @@ export interface JobImage {
   annotated: string;
   annotated_rel: string;
   objects: JobObject[];
+  shelves?: ShelvesData;
+  planogram?: PlanogramData;
+  compliance?: ComplianceData;
 }
 
 export interface JobResult {
