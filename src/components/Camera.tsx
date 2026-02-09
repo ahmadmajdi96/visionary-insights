@@ -184,7 +184,7 @@ export function Camera({ isOpen, onClose, onCapture, isSubmitting }: CameraProps
                   {/* Viewfinder guide overlay */}
                   {isCameraReady && (
                     <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                      <div className="relative w-[80%] aspect-[4/3] border-[3px] border-green-500 rounded-lg">
+                      <div className="relative w-[90%] aspect-[3/4] sm:w-[80%] sm:aspect-[4/3] border-[3px] border-green-500 rounded-lg">
                         {/* Horizontal center line */}
                         <div className="absolute top-1/2 left-0 right-0 h-[3px] -translate-y-1/2 bg-green-500 opacity-70" />
                         {/* Corner accents */}
