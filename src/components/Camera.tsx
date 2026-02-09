@@ -83,7 +83,7 @@ export function Camera({ isOpen, onClose, onCapture, isSubmitting }: CameraProps
   }, [facingMode, retryCount]);
 
   const capture = useCallback(() => {
-    const imageSrc = webcamRef.current?.getScreenshot({ width: 1920, height: 1080 });
+    const imageSrc = webcamRef.current?.getScreenshot();
     if (imageSrc) {
       setCapturedImage(imageSrc);
     }
