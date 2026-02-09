@@ -48,8 +48,10 @@ export function Camera({ isOpen, onClose, onCapture, isSubmitting }: CameraProps
 
   const videoConstraints: MediaTrackConstraints = isIOS
     ? {
-        // iOS Safari is picky; keep constraints minimal to improve stream start reliability
+        // Use 'ideal' so Safari won't reject constraints but will still aim for high res
         facingMode,
+        width: { ideal: 1920 },
+        height: { ideal: 1080 },
       }
     : {
         facingMode: { ideal: facingMode },
