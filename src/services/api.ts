@@ -118,5 +118,5 @@ export function getImageUrl(jobId: string, type: 'annotated' | 'crops' | 'input'
 }
 
 export function getOriginalImageUrl(jobId: string, filename: string): string {
-  return `${API_HOST}/v1/jobs/${jobId}/files/input/${filename}`;
+  return `${getApiHost()}/v1/jobs/${jobId}/files/input/${filename}`;
 }

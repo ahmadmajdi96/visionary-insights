@@ -56,6 +56,7 @@ const Index = () => {
               {isLoading ? 'Loading...' : `${jobs.length} scan${jobs.length !== 1 ? 's' : ''}`}
             </p>
           </div>
+          <ApiSettings />
           <Button
             variant="ghost"
             size="icon"
