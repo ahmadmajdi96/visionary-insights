@@ -6,6 +6,7 @@ import { JobList } from '@/components/JobList';
 import { Camera } from '@/components/Camera';
 import { CaptureButton } from '@/components/CaptureButton';
 import { ResultsView } from '@/components/ResultsView';
+import { ApiSettings } from '@/components/ApiSettings';
 import { Button } from '@/components/ui/button';
 
 const Index = () => {
