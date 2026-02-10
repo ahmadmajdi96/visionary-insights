@@ -31,7 +31,7 @@ export interface AllJobsResponse {
 
 export async function getAllJobs(): Promise<AllJobsResponse> {
   try {
-    const response = await fetch(`${API_BASE_URL}/jobs`, {
+    const response = await fetch(`${getApiBaseUrl()}/jobs`, {
       mode: 'cors',
     });
 
