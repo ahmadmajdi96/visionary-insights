@@ -1,8 +1,24 @@
 import { CreateJobResponse, JobStatusResponse, JobResult, Job } from '@/types/job';
 
 // Backend API configuration - uses Cloudflare tunnel for HTTPS access
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://synthesis-exemption-episodes-statistics.trycloudflare.com/v1';
-const API_HOST = import.meta.env.VITE_API_HOST || 'https://synthesis-exemption-episodes-statistics.trycloudflare.com';
+const DEFAULT_HOST = 'https://realtors-himself-projected-meters.trycloudflare.com';
+export const API_STORAGE_KEY = 'app_api_host';
+
+export function getApiHost(): string {
+  return localStorage.getItem(API_STORAGE_KEY) || import.meta.env.VITE_API_HOST || DEFAULT_HOST;
+}
+
+export function getApiBaseUrl(): string {
+  return `${getApiHost()}/v1`;
+}
+
+export function setApiUrls(host: string): void {
+  localStorage.setItem(API_STORAGE_KEY, host);
+}
+
+export function resetApiUrls(): void {
+  localStorage.removeItem(API_STORAGE_KEY);
+}
 
 export interface AllJobsResponse {
   jobs: {
@@ -15,7 +31,7 @@ export interface AllJobsResponse {
 
 export async function getAllJobs(): Promise<AllJobsResponse> {
   try {
-    const response = await fetch(`${API_BASE_URL}/jobs`, {
+    const response = await fetch(`${getApiBaseUrl()}/jobs`, {
       mode: 'cors',
     });
 
@@ -37,7 +53,7 @@ export async function submitImage(file: File): Promise<CreateJobResponse> {
   formData.append('file', file);
 
   try {
-    const response = await fetch(`${API_BASE_URL}/infer/image`, {
+    const response = await fetch(`${getApiBaseUrl()}/infer/image`, {
       method: 'POST',
       body: formData,
       mode: 'cors',
@@ -57,7 +73,7 @@ export async function submitImage(file: File): Promise<CreateJobResponse> {
 }
 
 export async function getJobStatus(jobId: string): Promise<JobStatusResponse> {
-  const response = await fetch(`${API_BASE_URL}/jobs/${jobId}`, {
+  const response = await fetch(`${getApiBaseUrl()}/jobs/${jobId}`, {
     mode: 'cors',
   });
 
@@ -69,7 +85,7 @@ export async function getJobStatus(jobId: string): Promise<JobStatusResponse> {
 }
 
 export async function getJobResults(jobId: string): Promise<JobResult> {
-  const response = await fetch(`${API_BASE_URL}/jobs/${jobId}/results`, {
+  const response = await fetch(`${getApiBaseUrl()}/jobs/${jobId}/results`, {
     mode: 'cors',
   });
 
@@ -81,7 +97,7 @@ export async function getJobResults(jobId: string): Promise<JobResult> {
 }
 
 export async function deleteJob(jobId: string): Promise<void> {
-  const response = await fetch(`${API_BASE_URL}/jobs/${jobId}`, {
+  const response = await fetch(`${getApiBaseUrl()}/jobs/${jobId}`, {
     method: 'DELETE',
     mode: 'cors',
   });
@@ -98,9 +114,9 @@ export function getFilenameFromPath(path: string): string {
 
 export function getImageUrl(jobId: string, type: 'annotated' | 'crops' | 'input', filename: string): string {
   // Build URL based on the API pattern: /v1/jobs/<job_id>/files/<type>/<filename>
-  return `${API_HOST}/v1/jobs/${jobId}/files/${type}/${filename}`;
+  return `${getApiHost()}/v1/jobs/${jobId}/files/${type}/${filename}`;
 }
 
 export function getOriginalImageUrl(jobId: string, filename: string): string {
-  return `${API_HOST}/v1/jobs/${jobId}/files/input/${filename}`;
+  return `${getApiHost()}/v1/jobs/${jobId}/files/input/${filename}`;
 }
