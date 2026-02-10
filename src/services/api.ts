@@ -85,7 +85,7 @@ export async function getJobStatus(jobId: string): Promise<JobStatusResponse> {
 }
 
 export async function getJobResults(jobId: string): Promise<JobResult> {
-  const response = await fetch(`${API_BASE_URL}/jobs/${jobId}/results`, {
+  const response = await fetch(`${getApiBaseUrl()}/jobs/${jobId}/results`, {
     mode: 'cors',
   });
 
