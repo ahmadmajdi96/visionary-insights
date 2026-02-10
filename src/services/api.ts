@@ -53,7 +53,7 @@ export async function submitImage(file: File): Promise<CreateJobResponse> {
   formData.append('file', file);
 
   try {
-    const response = await fetch(`${API_BASE_URL}/infer/image`, {
+    const response = await fetch(`${getApiBaseUrl()}/infer/image`, {
       method: 'POST',
       body: formData,
       mode: 'cors',
