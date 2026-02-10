@@ -97,7 +97,7 @@ export async function getJobResults(jobId: string): Promise<JobResult> {
 }
 
 export async function deleteJob(jobId: string): Promise<void> {
-  const response = await fetch(`${API_BASE_URL}/jobs/${jobId}`, {
+  const response = await fetch(`${getApiBaseUrl()}/jobs/${jobId}`, {
     method: 'DELETE',
     mode: 'cors',
   });
