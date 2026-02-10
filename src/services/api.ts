@@ -1,8 +1,24 @@
 import { CreateJobResponse, JobStatusResponse, JobResult, Job } from '@/types/job';
 
 // Backend API configuration - uses Cloudflare tunnel for HTTPS access
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://synthesis-exemption-episodes-statistics.trycloudflare.com/v1';
-const API_HOST = import.meta.env.VITE_API_HOST || 'https://synthesis-exemption-episodes-statistics.trycloudflare.com';
+const DEFAULT_HOST = 'https://realtors-himself-projected-meters.trycloudflare.com';
+export const API_STORAGE_KEY = 'app_api_host';
+
+export function getApiHost(): string {
+  return localStorage.getItem(API_STORAGE_KEY) || import.meta.env.VITE_API_HOST || DEFAULT_HOST;
+}
+
+export function getApiBaseUrl(): string {
+  return `${getApiHost()}/v1`;
+}
+
+export function setApiUrls(host: string): void {
+  localStorage.setItem(API_STORAGE_KEY, host);
+}
+
+export function resetApiUrls(): void {
+  localStorage.removeItem(API_STORAGE_KEY);
+}
 
 export interface AllJobsResponse {
   jobs: {
