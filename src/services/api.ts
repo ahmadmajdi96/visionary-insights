@@ -73,7 +73,7 @@ export async function submitImage(file: File): Promise<CreateJobResponse> {
 }
 
 export async function getJobStatus(jobId: string): Promise<JobStatusResponse> {
-  const response = await fetch(`${API_BASE_URL}/jobs/${jobId}`, {
+  const response = await fetch(`${getApiBaseUrl()}/jobs/${jobId}`, {
     mode: 'cors',
   });
 
