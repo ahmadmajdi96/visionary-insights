@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Camera as CameraIcon, X, RotateCcw, Send, Loader2, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from '@/hooks/use-toast';
+import { CameraLevelGuide } from '@/components/CameraLevelGuide';
 
 interface CameraProps {
   isOpen: boolean;
