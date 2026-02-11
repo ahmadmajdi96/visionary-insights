@@ -200,7 +200,9 @@ export function Camera({ isOpen, onClose, onCapture, isSubmitting }: CameraProps
                     </div>
                   )}
 
-                  {/* Loading overlay */}
+                  {/* Live level/tilt guide */}
+                  <CameraLevelGuide enabled={isCameraReady} />
+
                   {!isCameraReady && (
                     <div className="absolute inset-0 flex flex-col items-center justify-center bg-background">
                       <Loader2 className="w-8 h-8 animate-spin text-primary mb-2" />
