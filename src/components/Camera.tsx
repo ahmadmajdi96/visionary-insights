@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Camera as CameraIcon, X, RotateCcw, Send, Loader2, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from '@/hooks/use-toast';
+import { CameraLevelGuide } from '@/components/CameraLevelGuide';
 
 interface CameraProps {
   isOpen: boolean;
@@ -148,57 +149,17 @@ export function Camera({ isOpen, onClose, onCapture, isSubmitting }: CameraProps
            ) : !capturedImage ? (
             <>
               {!hasUserStartedCamera ? (
-                <div className="absolute inset-0 flex flex-col items-center justify-center bg-background px-6 py-8 overflow-y-auto">
-                  <div className="max-w-sm w-full space-y-6">
-                    <div className="text-center">
-                      <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto mb-3">
-                        <CameraIcon className="w-7 h-7 text-primary" />
-                      </div>
-                      <h3 className="text-lg font-semibold text-foreground">Ready to scan</h3>
-                      <p className="text-sm text-muted-foreground mt-1">
-                        Follow these tips for best results
-                      </p>
-                    </div>
-
-                    <div className="space-y-3">
-                      <div className="flex items-start gap-3 p-3 rounded-lg bg-muted/50">
-                        <span className="text-lg leading-none mt-0.5">📐</span>
-                        <div>
-                          <p className="text-sm font-medium text-foreground">Shoot flat & straight-on</p>
-                          <p className="text-xs text-muted-foreground">Hold your phone parallel to the surface. Avoid angles or tilting.</p>
-                        </div>
-                      </div>
-                      <div className="flex items-start gap-3 p-3 rounded-lg bg-muted/50">
-                        <span className="text-lg leading-none mt-0.5">💡</span>
-                        <div>
-                          <p className="text-sm font-medium text-foreground">Good, even lighting</p>
-                          <p className="text-xs text-muted-foreground">Avoid harsh shadows or glare. Natural light works best.</p>
-                        </div>
-                      </div>
-                      <div className="flex items-start gap-3 p-3 rounded-lg bg-muted/50">
-                        <span className="text-lg leading-none mt-0.5">🖼️</span>
-                        <div>
-                          <p className="text-sm font-medium text-foreground">Fill the frame</p>
-                          <p className="text-xs text-muted-foreground">Get close enough so the subject fills the viewfinder guide.</p>
-                        </div>
-                      </div>
-                      <div className="flex items-start gap-3 p-3 rounded-lg bg-muted/50">
-                        <span className="text-lg leading-none mt-0.5">✋</span>
-                        <div>
-                          <p className="text-sm font-medium text-foreground">Hold steady</p>
-                          <p className="text-xs text-muted-foreground">Keep still when capturing to avoid blur.</p>
-                        </div>
-                      </div>
-                    </div>
-
-                    <Button
-                      onClick={() => setHasUserStartedCamera(true)}
-                      className="w-full rounded-full"
-                      size="lg"
-                    >
-                      Start camera
-                    </Button>
-                  </div>
+                <div className="absolute inset-0 flex flex-col items-center justify-center bg-background p-8">
+                  <h3 className="text-lg font-semibold text-foreground mb-2">Ready to scan</h3>
+                  <p className="text-sm text-muted-foreground text-center mb-6">
+                    Tap the button below to start the camera.
+                  </p>
+                  <Button
+                    onClick={() => setHasUserStartedCamera(true)}
+                    className="rounded-full px-6"
+                  >
+                    Start camera
+                  </Button>
                 </div>
               ) : (
                 <>
@@ -239,7 +200,9 @@ export function Camera({ isOpen, onClose, onCapture, isSubmitting }: CameraProps
                     </div>
                   )}
 
-                  {/* Loading overlay */}
+                  {/* Live level/tilt guide */}
+                  <CameraLevelGuide enabled={isCameraReady} />
+
                   {!isCameraReady && (
                     <div className="absolute inset-0 flex flex-col items-center justify-center bg-background">
                       <Loader2 className="w-8 h-8 animate-spin text-primary mb-2" />
