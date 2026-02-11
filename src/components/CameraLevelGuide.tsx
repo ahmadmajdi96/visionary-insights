@@ -1,18 +1,64 @@
+import { useState, useEffect, useRef } from 'react';
 import { useDeviceOrientation } from '@/hooks/useDeviceOrientation';
 
 interface CameraLevelGuideProps {
   enabled: boolean;
 }
 
+function getDirectionHint(betaOffset: number, gammaOffset: number, threshold: number): string {
+  if (Math.abs(betaOffset) < threshold && Math.abs(gammaOffset) < threshold) return '';
+  // Pick the dominant axis
+  if (Math.abs(betaOffset) > Math.abs(gammaOffset)) {
+    return betaOffset > 0 ? 'Tilt top away from you' : 'Tilt top toward you';
+  }
+  return gammaOffset > 0 ? 'Tilt left side down' : 'Tilt right side down';
+}
+
 export function CameraLevelGuide({ enabled }: CameraLevelGuideProps) {
   const { gamma, beta, isSupported, permissionDenied, requestPermission } = useDeviceOrientation(enabled);
+  const [stableSeconds, setStableSeconds] = useState(0);
+  const [locked, setLocked] = useState(false);
+  const lastLevelTime = useRef<number | null>(null);
 
-  // iOS needs explicit permission request
   const needsPermission = !isSupported && !permissionDenied && typeof (DeviceOrientationEvent as any).requestPermission === 'function';
+
+  const betaOffset = beta - 90;
+  const gammaOffset = gamma;
+  const tiltMagnitude = Math.sqrt(betaOffset * betaOffset + gammaOffset * gammaOffset);
+  const isLevel = tiltMagnitude < 5;
+  const isClose = tiltMagnitude < 15;
+
+  // Track how long we've been level
+  useEffect(() => {
+    if (!enabled || locked) return;
+    if (isLevel) {
+      if (!lastLevelTime.current) lastLevelTime.current = Date.now();
+      const interval = setInterval(() => {
+        const elapsed = (Date.now() - (lastLevelTime.current || Date.now())) / 1000;
+        setStableSeconds(Math.min(elapsed, 3));
+        if (elapsed >= 2) {
+          setLocked(true);
+          clearInterval(interval);
+        }
+      }, 100);
+      return () => clearInterval(interval);
+    } else {
+      lastLevelTime.current = null;
+      setStableSeconds(0);
+    }
+  }, [isLevel, enabled, locked]);
+
+  // Reset lock when guide is disabled/re-enabled
+  useEffect(() => {
+    if (!enabled) {
+      setLocked(false);
+      setStableSeconds(0);
+      lastLevelTime.current = null;
+    }
+  }, [enabled]);
 
   if (!enabled) return null;
 
-  // If orientation not available, show a simple text tip instead
   if (!isSupported && !needsPermission) {
     return (
       <div className="absolute top-16 left-1/2 -translate-x-1/2 z-10 pointer-events-none">
@@ -38,56 +84,80 @@ export function CameraLevelGuide({ enabled }: CameraLevelGuideProps) {
 
   if (permissionDenied) return null;
 
-  // Calculate tilt: gamma = left/right, beta adjusted for phone held upright (~90° when vertical)
-  // When shooting down at a flat surface, beta ≈ 90 (phone vertical pointing down)
-  // We want to detect deviation from "pointing straight down" → beta deviation from 90
-  const betaOffset = beta - 90; // 0 when phone points straight down
-  const gammaOffset = gamma;     // 0 when level left-right
-
-  const tiltMagnitude = Math.sqrt(betaOffset * betaOffset + gammaOffset * gammaOffset);
-  const isLevel = tiltMagnitude < 5;
-  const isClose = tiltMagnitude < 15;
-
-  // Clamp offsets for visual indicator
   const clampedX = Math.max(-30, Math.min(30, gammaOffset));
   const clampedY = Math.max(-30, Math.min(30, betaOffset));
 
-  const statusColor = isLevel ? 'rgb(34, 197, 94)' : isClose ? 'rgb(250, 204, 21)' : 'rgb(239, 68, 68)';
-  const statusText = isLevel ? '✓ Level' : isClose ? 'Almost level' : 'Tilt to level';
+  const statusColor = locked
+    ? 'rgb(34, 197, 94)'
+    : isLevel
+      ? 'rgb(34, 197, 94)'
+      : isClose
+        ? 'rgb(250, 204, 21)'
+        : 'rgb(239, 68, 68)';
+
+  const directionHint = getDirectionHint(betaOffset, gammaOffset, 5);
+  const statusText = locked
+    ? '🔒 Locked – Shoot now!'
+    : isLevel
+      ? `✓ Level – Hold steady ${stableSeconds > 0 ? `(${Math.ceil(2 - stableSeconds)}s)` : ''}`
+      : directionHint || 'Tilt to level';
+
+  // Progress ring for stable hold
+  const progressPct = locked ? 100 : (stableSeconds / 2) * 100;
 
   return (
     <>
-      {/* Level bubble indicator */}
-      <div className="absolute top-16 right-4 z-10 pointer-events-none flex flex-col items-center gap-1.5">
+      {/* Coaching banner at top */}
+      <div className="absolute top-16 left-1/2 -translate-x-1/2 z-10 pointer-events-none">
         <div
-          className="relative w-14 h-14 rounded-full border-2 flex items-center justify-center"
-          style={{
-            borderColor: statusColor,
-            backgroundColor: 'rgba(0,0,0,0.4)',
-            backdropFilter: 'blur(4px)',
-          }}
+          className="px-4 py-2 rounded-full backdrop-blur-sm transition-colors duration-300"
+          style={{ backgroundColor: `${statusColor}22`, border: `1px solid ${statusColor}66` }}
         >
-          {/* Center crosshair */}
-          <div className="absolute w-1.5 h-1.5 rounded-full bg-white/40" />
-          {/* Moving dot */}
-          <div
-            className="absolute w-3 h-3 rounded-full transition-all duration-100"
-            style={{
-              backgroundColor: statusColor,
-              transform: `translate(${clampedX * 0.6}px, ${clampedY * 0.6}px)`,
-              boxShadow: `0 0 6px ${statusColor}`,
-            }}
-          />
+          <p className="text-xs font-medium text-center whitespace-nowrap" style={{ color: statusColor }}>
+            {statusText}
+          </p>
         </div>
-        <span
-          className="text-[10px] font-medium px-2 py-0.5 rounded-full"
-          style={{
-            color: statusColor,
-            backgroundColor: 'rgba(0,0,0,0.5)',
-          }}
-        >
-          {statusText}
-        </span>
+      </div>
+
+      {/* Level bubble indicator */}
+      <div className="absolute top-28 right-4 z-10 pointer-events-none flex flex-col items-center gap-1.5">
+        <div className="relative w-16 h-16 flex items-center justify-center">
+          {/* Progress ring */}
+          <svg className="absolute inset-0 w-full h-full -rotate-90" viewBox="0 0 64 64">
+            <circle cx="32" cy="32" r="29" fill="none" stroke="rgba(255,255,255,0.15)" strokeWidth="3" />
+            <circle
+              cx="32" cy="32" r="29"
+              fill="none"
+              stroke={statusColor}
+              strokeWidth="3"
+              strokeLinecap="round"
+              strokeDasharray={`${Math.PI * 58}`}
+              strokeDashoffset={`${Math.PI * 58 * (1 - progressPct / 100)}`}
+              className="transition-all duration-200"
+            />
+          </svg>
+          {/* Inner bubble area */}
+          <div
+            className="relative w-12 h-12 rounded-full flex items-center justify-center"
+            style={{ backgroundColor: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)' }}
+          >
+            {locked ? (
+              <span className="text-lg">✓</span>
+            ) : (
+              <>
+                <div className="absolute w-1.5 h-1.5 rounded-full bg-white/30" />
+                <div
+                  className="absolute w-3 h-3 rounded-full transition-all duration-75"
+                  style={{
+                    backgroundColor: statusColor,
+                    transform: `translate(${clampedX * 0.5}px, ${clampedY * 0.5}px)`,
+                    boxShadow: `0 0 8px ${statusColor}`,
+                  }}
+                />
+              </>
+            )}
+          </div>
+        </div>
       </div>
     </>
   );
