@@ -61,9 +61,30 @@ export function CameraLevelGuide({ enabled }: CameraLevelGuideProps) {
 
   if (!isSupported && !needsPermission) {
     return (
-      <div className="absolute top-16 left-1/2 -translate-x-1/2 z-10 pointer-events-none">
-        <div className="px-3 py-1.5 rounded-full bg-background/70 backdrop-blur-sm">
-          <p className="text-xs text-muted-foreground">Hold phone flat & parallel to surface</p>
+      <div className="absolute top-16 left-0 right-0 z-10 pointer-events-none flex flex-col items-center gap-2 px-4">
+        <div
+          className="w-full max-w-xs rounded-xl px-4 py-3 backdrop-blur-md"
+          style={{ backgroundColor: 'rgba(0,0,0,0.6)' }}
+        >
+          <p className="text-xs font-semibold text-white text-center mb-2">📐 Tips for best results</p>
+          <ul className="space-y-1.5 text-[11px] text-white/80">
+            <li className="flex items-start gap-2">
+              <span className="shrink-0 mt-px">📱</span>
+              <span>Hold phone <strong className="text-white">parallel</strong> to the surface, pointing straight down</span>
+            </li>
+            <li className="flex items-start gap-2">
+              <span className="shrink-0 mt-px">💡</span>
+              <span>Use <strong className="text-white">even lighting</strong> — avoid shadows & glare</span>
+            </li>
+            <li className="flex items-start gap-2">
+              <span className="shrink-0 mt-px">🖼️</span>
+              <span>Fill the <strong className="text-white">green frame</strong> with the object</span>
+            </li>
+            <li className="flex items-start gap-2">
+              <span className="shrink-0 mt-px">✋</span>
+              <span>Hold <strong className="text-white">steady</strong> for a sharp, blur-free image</span>
+            </li>
+          </ul>
         </div>
       </div>
     );
