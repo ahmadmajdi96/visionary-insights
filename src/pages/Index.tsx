@@ -1,7 +1,8 @@
 import { useState } from 'react';
-
-import { Scan, RefreshCw, Loader2 } from 'lucide-react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { ArrowLeft, Scan, RefreshCw, Loader2 } from 'lucide-react';
 import { useJobs } from '@/hooks/useJobs';
+import { useAuth } from '@/contexts/AuthContext';
 import { JobList } from '@/components/JobList';
 import { Camera } from '@/components/Camera';
 import { CaptureButton } from '@/components/CaptureButton';
@@ -10,6 +11,11 @@ import { ApiSettings } from '@/components/ApiSettings';
 import { Button } from '@/components/ui/button';
 
 const Index = () => {
+  const { storeId, planogramId } = useParams<{ storeId: string; planogramId: string }>();
+  const navigate = useNavigate();
+  const { stores, planograms } = useAuth();
+  const store = stores.find((s) => s.id === storeId);
+  const planogram = planograms.find((p) => p.id === planogramId);
   const { jobs, isSubmitting, isLoading, submitNewJob, getJob, deleteJob, refreshJobs } = useJobs();
   const [isCameraOpen, setIsCameraOpen] = useState(false);
   const [selectedJobId, setSelectedJobId] = useState<string | null>(null);
@@ -45,15 +51,20 @@ const Index = () => {
       {/* Header */}
       <header className="sticky top-0 z-10 bg-background/95 backdrop-blur-sm border-b border-border safe-top">
         <div className="flex items-center gap-3 p-4">
-          <div className="w-10 h-10 rounded-lg bg-primary flex items-center justify-center">
-            <Scan className="w-5 h-5 text-primary-foreground" />
-          </div>
-          <div className="flex-1">
-            <h1 className="text-xl font-display font-bold text-foreground">
-              Image Scanner
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => navigate(`/stores/${storeId}/planograms`)}
+            className="w-10 h-10 rounded-full"
+          >
+            <ArrowLeft className="w-5 h-5" />
+          </Button>
+          <div className="flex-1 min-w-0">
+            <h1 className="text-lg font-display font-bold text-foreground truncate">
+              {planogram?.name || 'Scans'}
             </h1>
-            <p className="text-xs text-muted-foreground">
-              {isLoading ? 'Loading...' : `${jobs.length} scan${jobs.length !== 1 ? 's' : ''}`}
+            <p className="text-xs text-muted-foreground truncate">
+              {store?.name} · {isLoading ? 'Loading...' : `${jobs.length} scan${jobs.length !== 1 ? 's' : ''}`}
             </p>
           </div>
           <ApiSettings />
