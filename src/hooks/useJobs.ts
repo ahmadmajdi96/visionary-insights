@@ -1,9 +1,11 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
-import { Job, JobStatus } from '@/types/job';
+import { Job, JobStatus, JobResult } from '@/types/job';
 import { submitImage, getJobStatus, getJobResults, getAllJobs, deleteJob as deleteJobApi } from '@/services/api';
+import { useParams } from 'react-router-dom';
 import { toast } from '@/hooks/use-toast';
 
 export function useJobs() {
+  const { planogramId } = useParams<{ planogramId: string }>();
   const [jobs, setJobs] = useState<Job[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -85,27 +87,39 @@ export function useJobs() {
   const fetchAllJobs = useCallback(async () => {
     setIsLoading(true);
     try {
-      const response = await getAllJobs();
+      const serverJobs = await getAllJobs(planogramId);
       
-      const serverJobs: Job[] = response.jobs.map(job => ({
-        job_id: job.job_id,
-        status: job.status as JobStatus,
-        stage: job.stage,
-        updated_at: job.updated_at,
-      }));
+      const mappedJobs: Job[] = serverJobs.map((job: any) => {
+        // Build result from inline data if images are present
+        const result: JobResult | undefined = job.images ? {
+          job_id: job.job_id,
+          status: job.status as JobStatus,
+          total_images: job.total_images || job.images.length,
+          images: job.images,
+        } : job.result;
+        
+        return {
+          job_id: job.job_id,
+          status: (job.status as JobStatus) || 'QUEUED',
+          stage: job.stage,
+          updated_at: job.updated_at,
+          planogram_id: job.planogram_id,
+          result,
+        };
+      });
       
-      setJobs(serverJobs);
+      setJobs(mappedJobs);
       
       // Start polling for jobs that are still in progress
-      serverJobs.forEach(job => {
+      mappedJobs.forEach(job => {
         if (job.status === 'QUEUED' || job.status === 'RUNNING') {
           startPolling(job.job_id);
         }
       });
       
-      // Fetch results for completed jobs
-      serverJobs.forEach(async (job) => {
-        if (job.status === 'SUCCEEDED') {
+      // Fetch results for completed jobs that don't have results yet
+      mappedJobs.forEach(async (job) => {
+        if (job.status === 'SUCCEEDED' && !job.result) {
           try {
             const result = await getJobResults(job.job_id);
             updateJob(job.job_id, { result });

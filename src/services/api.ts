@@ -37,18 +37,10 @@ export function resetApiUrls(): void {
   localStorage.removeItem(API_JOBS_STORAGE_KEY);
 }
 
-export interface AllJobsResponse {
-  jobs: {
-    job_id: string;
-    status: string;
-    stage?: string;
-    updated_at?: string;
-  }[];
-}
-
-export async function getAllJobs(): Promise<AllJobsResponse> {
+export async function getAllJobs(planogramId?: string): Promise<Job[]> {
   try {
-    const response = await fetch(`${getJobsApiBaseUrl()}/jobs`, {
+    const params = planogramId ? `?planogram_id=${encodeURIComponent(planogramId)}` : '';
+    const response = await fetch(`${getJobsApiBaseUrl()}/jobs${params}`, {
       mode: 'cors',
     });
 
@@ -56,7 +48,9 @@ export async function getAllJobs(): Promise<AllJobsResponse> {
       throw new Error(`Failed to fetch jobs: ${response.statusText}`);
     }
 
-    return response.json();
+    const data = await response.json();
+    // API returns a raw array of jobs
+    return Array.isArray(data) ? data : (data.jobs || []);
   } catch (error) {
     if (error instanceof TypeError && error.message.includes('Failed to fetch')) {
       throw new Error('Network error: Server may be unreachable.');

@@ -65,8 +65,12 @@ export interface Job {
   status: JobStatus;
   stage?: string;
   updated_at?: string;
+  planogram_id?: string;
+  total_images?: number;
   localImageUrl?: string;
   result?: JobResult;
+  images?: JobImage[];
+  error?: string | null;
 }
 
 export interface CreateJobResponse {
