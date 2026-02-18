@@ -79,7 +79,7 @@ const Login = () => {
         </form>
 
         <p className="text-xs text-muted-foreground text-center">
-          Demo: use any email &amp; password
+          Sign in with your account credentials
         </p>
       </div>
     </div>
