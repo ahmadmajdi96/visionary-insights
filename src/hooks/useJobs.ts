@@ -149,7 +149,7 @@ export function useJobs() {
   const submitNewJob = useCallback(async (file: File, localImageUrl: string) => {
     setIsSubmitting(true);
     try {
-      const response = await submitImage(file);
+      const response = await submitImage(file, planogramId);
       
       const newJob: Job = {
         job_id: response.job_id,
