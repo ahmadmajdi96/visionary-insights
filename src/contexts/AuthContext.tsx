@@ -70,8 +70,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   );
 }
 
-export function useAuth() {
+export function useAuth(): AuthContextType {
   const ctx = useContext(AuthContext);
-  if (!ctx) throw new Error('useAuth must be used within AuthProvider');
+  if (!ctx) {
+    // Return safe defaults during HMR boundary reloads
+    return {
+      user: null,
+      stores: [],
+      planograms: [],
+      accessToken: null,
+      isAuthenticated: false,
+      login: async () => { throw new Error('AuthProvider not mounted'); },
+      logout: () => {},
+      getStorePlanograms: () => [],
+    };
+  }
   return ctx;
 }
