@@ -1,7 +1,7 @@
 import { CreateJobResponse, JobStatusResponse, JobResult, Job } from '@/types/job';
 
 // Backend API configuration - uses Cloudflare tunnel for HTTPS access
-const DEFAULT_HOST = 'https://realtors-himself-projected-meters.trycloudflare.com';
+const DEFAULT_HOST = 'https://generators-drainage-far-sacred.trycloudflare.com';
 export const API_STORAGE_KEY = 'app_api_host';
 
 export function getApiHost(): string {
