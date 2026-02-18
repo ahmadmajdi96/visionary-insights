@@ -59,12 +59,15 @@ export async function getAllJobs(planogramId?: string): Promise<Job[]> {
   }
 }
 
-export async function submitImage(file: File): Promise<CreateJobResponse> {
+export async function submitImage(file: File, planogramId?: string): Promise<CreateJobResponse> {
   const formData = new FormData();
   formData.append('file', file);
+  if (planogramId) {
+    formData.append('planogram_id', planogramId);
+  }
 
   try {
-    const response = await fetch(`${getJobsApiBaseUrl()}/infer/image`, {
+    const response = await fetch(`${getJobsApiBaseUrl()}/jobs`, {
       method: 'POST',
       body: formData,
       mode: 'cors',
