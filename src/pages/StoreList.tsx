@@ -1,17 +1,11 @@
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Store, MapPin, ChevronRight, LogOut } from 'lucide-react';
+import { Store, MapPin, ChevronRight } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
-import { Button } from '@/components/ui/button';
 
 const StoreList = () => {
-  const { stores, user, logout, getStorePlanograms } = useAuth();
+  const { stores, user, getStorePlanograms } = useAuth();
   const navigate = useNavigate();
-
-  const handleLogout = () => {
-    logout();
-    navigate('/login');
-  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -24,9 +18,6 @@ const StoreList = () => {
             <h1 className="text-xl font-display font-bold text-foreground">My Stores</h1>
             <p className="text-xs text-muted-foreground">{user?.username}</p>
           </div>
-          <Button variant="ghost" size="icon" onClick={handleLogout} className="w-10 h-10 rounded-full">
-            <LogOut className="w-5 h-5" />
-          </Button>
         </div>
       </header>
 
