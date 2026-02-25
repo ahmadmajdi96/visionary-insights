@@ -2,7 +2,7 @@ import { CreateJobResponse, JobStatusResponse, JobResult, Job } from '@/types/jo
 
 // Backend API configuration - uses Cloudflare tunnels for HTTPS access
 // Main host: auth, data, files, etc.
-const DEFAULT_HOST = 'https://socket-stuffed-rely-laptop.trycloudflare.com';
+const DEFAULT_HOST = 'https://iralpha.backend.cortanexai.com';
 // Jobs host: job submission, status, results
 const DEFAULT_JOBS_HOST = 'https://helena-invitations-mid-keen.trycloudflare.com';
 
