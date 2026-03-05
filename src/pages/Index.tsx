@@ -81,7 +81,7 @@ const Index = () => {
       </header>
 
       {/* Job List */}
-      <main className="pt-4">
+      <main className="pt-4 pb-28">
         {isLoading ? (
           <div className="flex flex-col items-center justify-center py-16 px-4">
             <Loader2 className="w-10 h-10 animate-spin text-primary mb-4" />
