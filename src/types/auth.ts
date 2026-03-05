@@ -1,7 +1,7 @@
 export interface AuthUser {
   id: string;
   email: string;
-  username: string;
+  username: string | null;
 }
 
 export interface Store {
@@ -15,20 +15,29 @@ export interface Store {
   updated_at: string;
 }
 
-export interface PlanogramSlot {
-  slot: number;
+export interface PlanogramProduct {
+  instanceId: string;
+  skuId: string | null;
+  name: string;
+  facings: number;
+}
+
+export interface PlanogramShelf {
+  id: string;
   label: string;
+  products: PlanogramProduct[];
+  widthCm: number | null;
 }
 
 export interface Planogram {
   id: string;
   tenant_id: string;
   store_id: string;
-  shelf_id: string;
+  shelf_id: string | null;
   name: string;
   description: string | null;
   status: string;
-  layout: PlanogramSlot[];
+  layout: PlanogramShelf[];
   created_by: string | null;
   created_at: string;
   updated_at: string;

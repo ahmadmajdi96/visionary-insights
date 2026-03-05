@@ -54,12 +54,15 @@ const PlanogramList = () => {
                   {plano.description && (
                     <p className="text-xs text-muted-foreground mt-0.5 truncate">{plano.description}</p>
                   )}
-                  <div className="flex items-center gap-2 mt-1">
+                    <div className="flex items-center gap-2 mt-1">
                     <span className="text-xs px-2 py-0.5 rounded-full bg-accent text-accent-foreground font-medium">
                       {plano.status}
                     </span>
                     <span className="text-xs text-muted-foreground">
-                      {plano.layout.length} slot{plano.layout.length !== 1 ? 's' : ''}
+                      {plano.layout.length} {plano.layout.length !== 1 ? 'shelves' : 'shelf'}
+                    </span>
+                    <span className="text-xs text-muted-foreground">
+                      · {plano.layout.reduce((sum, s) => sum + (s.products?.length || 0), 0)} products
                     </span>
                   </div>
                 </div>
