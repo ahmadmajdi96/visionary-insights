@@ -84,13 +84,23 @@ export function Camera({ isOpen, onClose, onCapture, isSubmitting }: CameraProps
   }, [facingMode, retryCount]);
 
   const capture = useCallback(() => {
+    if (!webcamRef.current) {
+      console.error('Webcam ref not available');
+      toast({ title: '❌ Capture failed', description: 'Camera not ready. Please try again.', variant: 'destructive' });
+      return;
+    }
     // Capture at the video's native sensor resolution (not the CSS display size)
-    const video = webcamRef.current?.video;
+    const video = webcamRef.current.video;
     const nativeWidth = video?.videoWidth || 1920;
     const nativeHeight = video?.videoHeight || 1080;
-    const imageSrc = webcamRef.current?.getScreenshot({ width: nativeWidth, height: nativeHeight });
+    console.log('Capturing at resolution:', nativeWidth, 'x', nativeHeight);
+    const imageSrc = webcamRef.current.getScreenshot({ width: nativeWidth, height: nativeHeight });
     if (imageSrc) {
+      console.log('Image captured successfully, length:', imageSrc.length);
       setCapturedImage(imageSrc);
+    } else {
+      console.error('getScreenshot returned null');
+      toast({ title: '❌ Capture failed', description: 'Could not capture image. Please try again.', variant: 'destructive' });
     }
   }, []);
 
